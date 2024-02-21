@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperReport PUBLIC "-//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport name="DynamicTableTemplate" columnCount="1" pageWidth="595" pageHeight="842" orientation="Portrait" whenNoDataType="AllSectionsNoDetail" isSummaryNewPage="true">
+    <parameter name="columnNames" class="java.util.List"/>
+    <parameter name="columnWidths" class="java.util.List"/>
+
+    <variable name="COLUMN_NUMBER" class="java.lang.Integer" incrementType="Column">
+        <variableExpression><![CDATA[$V{COLUMN_NUMBER} + 1]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+
+    <!-- Заголовок колонок -->
+    <columnHeader>
+        <band height="30">
+            <!-- Создание колонок на основе размера первого списка -->
+            <textField>
+                <reportElement x="0" y="0" width="$P{columnWidths}.get($V{COLUMN_NUMBER})" height="30"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{columnNames}.get($V{COLUMN_NUMBER})]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnHeader>
+</jasperReport>
