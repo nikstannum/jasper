@@ -3,11 +3,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRLineBox;
-import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -15,6 +15,7 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignConditionalStyle;
+import net.sf.jasperreports.engine.design.JRDesignElement;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignLine;
@@ -46,9 +47,13 @@ public class App {
         Map<String, Object> mainParameters = new HashMap<>();
         mainParameters.put("text", "Some text");
 
-        JasperDesign tableJasperDesign = createDesign();
+        List<Map<String, Object>> notSearchedNotChecked = getNotSearchedNotChecked(1);
 
-        JRMapCollectionDataSource jrDataSource = prepareDataSource();
+        HashMap<String, Class<?>> columnNameClassHeaders = getColumnHeaders(notSearchedNotChecked);
+
+        JasperDesign tableJasperDesign = createDesign(columnNameClassHeaders);
+
+        JRMapCollectionDataSource jrDataSource = prepareDataSource(notSearchedNotChecked);
 
         JasperReport tableJasperReport = JasperCompileManager
                 .compileReport(tableJasperDesign);
@@ -78,27 +83,12 @@ public class App {
      *
      * @return JRDataSource.
      */
-    private static JRMapCollectionDataSource prepareDataSource() {
-        List<Map<String, ?>> preparedData = new ArrayList<>();
-        Map<String, Object> map;
-        map = new HashMap<>();
-        map.put("name", "Первый");
-        map.put("value", 10);
-
-        // В реальности нужно будет добавлять необходимые поля, сколько нужно,
-        // динамически, в зависимости от параметров и данных.
-        preparedData.add(map);
-
-        map = new HashMap<String, Object>();
-        map.put("name", "Второй");
-        map.put("value", 4);
-        // В реальности нужно будет добавлять необходимые поля, сколько нужно,
-        // динамически, в зависимости от параметров и данных.
-        preparedData.add(map);
+    private static JRMapCollectionDataSource prepareDataSource(List<Map<String, Object>> notSearchedNotChecked) {
+        List<Map<String, ?>> preparedData = new ArrayList<>(notSearchedNotChecked);
         return new JRMapCollectionDataSource(preparedData);
     }
 
-    public static JasperDesign createDesign() throws JRException {
+    public static JasperDesign createDesign(Map<String, Class<?>> columnNameClass) throws JRException {
         // Эквивалентно StaticText в JasperStudio
         JRDesignStaticText staticText = null;
 
@@ -172,69 +162,130 @@ public class App {
         lineBox.getLeftPen().setLineWidth(0.5f);
         jasperDesign.addStyle(headerStyle);
 
-        // Поля отчёта.
-        field = new JRDesignField();
-        field.setName("name");
-        field.setValueClass(java.lang.String.class);
-        jasperDesign.addField(field);
-
-        field = new JRDesignField();
-        field.setName("value");
-        field.setValueClass(java.lang.Integer.class);
-        jasperDesign.addField(field);
-        // В случае отчёта с динамическими полями пробегаемся по количеству
-        // полей и добавляем JRDesignField для каждого с уникальным именем.
-
-
-        // Title band
-        band = new JRDesignBand();
-        // добавляем нужные элементы в band.
-        // Можно добавлять JRDesignTextField-ы и JRDesignStaticField-ы,
-        // картинки и всё, что угодно. Мы пропустим для простоты.
-        jasperDesign.setTitle(band);
-
         int x;
         int y;
 
+        x = 0;
+        y = 0;
+
+        // column headers
+        // Заголовки колонок.
+        JRDesignBand columnHeaderBand = new JRDesignBand();
+        columnHeaderBand.setHeight(ROW_HEIGHT);
+
+        for (Entry<String, Class<?>> columnName : columnNameClass.entrySet()) {
+            staticText = new JRDesignStaticText();
+            staticText.setX(x);
+            staticText.setY(y);
+            staticText.setWidth(COLUMN_WIDTH);
+            staticText.setHeight(ROW_HEIGHT);
+            staticText.setStyle(headerStyle);
+            staticText.setText(columnName.getKey());
+
+            columnHeaderBand.addElement(staticText);
+
+            x += staticText.getWidth();
+        }
+
+        jasperDesign.setColumnHeader(columnHeaderBand);
+
+
+
+        x = 0;
+        y = 0;
         // Detail band (данные)
         band = new JRDesignBand();
         band.setHeight(ROW_HEIGHT);
-        x = 0;
-        y = 0;
-        textField = new JRDesignTextField();
-        textField.setX(x);
-        textField.setY(y);
-        textField.setWidth(COLUMN_WIDTH);
-        textField.setHeight(ROW_HEIGHT);
-        expression = new JRDesignExpression();
-        expression.setText("$F{name}");
-        textField.setExpression(expression);
-        textField.setStyle(normalStyle);
-        band.addElement(textField);
-        x += textField.getWidth();
+        // Поля отчёта.
+        for (Entry<String, Class<?>> columnClass : columnNameClass.entrySet()) {
+            field = new JRDesignField();
+            String columnName = columnClass.getKey();
+            field.setName(columnName);
+            Class<?> columnValueClass = columnClass.getValue();
+            field.setValueClass(columnValueClass);
+            jasperDesign.addField(field);
 
-        textField = new JRDesignTextField();
-        textField.setX(x);
-        textField.setY(y);
-        textField.setWidth(COLUMN_WIDTH);
-        textField.setHeight(ROW_HEIGHT);
-        expression = new JRDesignExpression();
-        expression.setText("$F{value}");
-        textField.setExpression(expression);
-        textField.setStyle(normalStyle);
-        band.addElement(textField);
-        x += textField.getWidth();
-
+            textField = new JRDesignTextField();
+            textField.setX(x);
+            textField.setY(y);
+            textField.setWidth(COLUMN_WIDTH);
+            textField.setHeight(ROW_HEIGHT);
+            expression = new JRDesignExpression();
+            expression.setText("$F{" + columnName + "}");
+            textField.setExpression(expression);
+            textField.setStyle(normalStyle);
+            band.addElement(textField);
+            x += textField.getWidth();
+        }
 
         // DetailsBand добавляется немного странно, да...
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(band);
 
 
-
         // Column footer
-        band = new JRDesignBand();
-        jasperDesign.setColumnFooter(band);
+//        band = new JRDesignBand();
+//        jasperDesign.setColumnFooter(band);
 
         return jasperDesign;
     }
+
+    private static HashMap<String, Class<?>> getColumnHeaders(List<Map<String, Object>> notSearchedNotChecked) {
+        return notSearchedNotChecked.stream()
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors
+                        .toMap(Entry::getKey, entry -> entry.getValue().getClass(), (existingVal, newVal) -> existingVal, HashMap::new));
+    }
+
+    private static List<Map<String, Object>> getNotSearchedNotChecked(int batch) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String req1 = "req1";
+        String req2 = "req2";
+        String req3 = "req3";
+        String req4 = "req4";
+        String req5 = "req5";
+        String req6 = "req6";
+
+        String reqVal1 = "val1";
+        String reqVal2 = "val2";
+        String reqVal3 = "val3";
+        String reqVal4 = "val4";
+        String reqVal5 = "val5";
+        String reqVal6 = "val6";
+
+
+        Map<String, Object> map1 = new HashMap<>();
+        map1.put(req1, reqVal1);
+        map1.put(req2, reqVal2);
+        map1.put(req3, reqVal3);
+
+        Map<String, Object> map2 = new HashMap<>();
+        map2.put(req1, reqVal1);
+        map2.put(req2, reqVal2);
+        map2.put(req3, reqVal3);
+        map2.put(req4, reqVal4);
+
+        Map<String, Object> map3 = new HashMap<>();
+        map3.put(req1, reqVal1);
+        map3.put(req2, reqVal2);
+        map3.put(req3, reqVal3);
+        map3.put(req4, reqVal4);
+        map3.put(req5, reqVal5);
+
+        Map<String, Object> map4 = new HashMap<>();
+        map4.put(req1, reqVal1);
+        map4.put(req2, reqVal2);
+        map4.put(req3, reqVal3);
+        map4.put(req4, reqVal4);
+        map4.put(req5, reqVal5);
+        map4.put(req6, reqVal6);
+
+        for (int i = 0; i < batch; i++) {
+            list.add(map1);
+            list.add(map2);
+            list.add(map3);
+            list.add(map4);
+        }
+        return list;
+    }
+
 }
