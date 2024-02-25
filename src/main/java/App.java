@@ -1,11 +1,13 @@
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRLineBox;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -25,7 +27,9 @@ import net.sf.jasperreports.engine.design.JRDesignStyle;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.type.LineStyleEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
+import net.sf.jasperreports.engine.type.WhenResourceMissingTypeEnum;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
@@ -47,13 +51,14 @@ public class App {
         Map<String, Object> mainParameters = new HashMap<>();
         mainParameters.put("text", "Some text");
 
-        List<Map<String, Object>> notSearchedNotChecked = getNotSearchedNotChecked(1);
+        List<Map<String, Object>> notSearchedNotChecked = getNotSearchedNotChecked(0);
 
         HashMap<String, Class<?>> columnNameClassHeaders = getColumnHeaders(notSearchedNotChecked);
 
         JasperDesign tableJasperDesign = createDesign(columnNameClassHeaders);
 
         JRMapCollectionDataSource jrDataSource = prepareDataSource(notSearchedNotChecked);
+
 
         JasperReport tableJasperReport = JasperCompileManager
                 .compileReport(tableJasperDesign);
@@ -128,9 +133,9 @@ public class App {
 //        jasperDesign.setRightMargin(40); // правое
 //        jasperDesign.setTopMargin(40); // верхнее
 //        jasperDesign.setBottomMargin(40); // нижнее
-        jasperDesign.setIgnorePagination(true); // FIXME need to define
-        jasperDesign
-                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL); // FIXME when there is no data
+        jasperDesign.setIgnorePagination(false); // FIXME need to define
+//        jasperDesign
+//                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL); // FIXME when there is no data
 
         JRDesignStyle normalStyle = new JRDesignStyle();
         normalStyle.setName("normal");
@@ -210,6 +215,7 @@ public class App {
             textField.setY(y);
             textField.setWidth(COLUMN_WIDTH);
             textField.setHeight(ROW_HEIGHT);
+            textField.setBlankWhenNull(true);
             expression = new JRDesignExpression();
             expression.setText("$F{" + columnName + "}");
             textField.setExpression(expression);
@@ -287,5 +293,4 @@ public class App {
         }
         return list;
     }
-
 }

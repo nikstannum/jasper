@@ -4,10 +4,9 @@
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="DynamicTextTemplate" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20"
               rightMargin="20" topMargin="20" bottomMargin="20" uuid="d391726c-96ea-45c5-bb0b-51afa83a4c61">
-    <parameter name="text" class="java.lang.String" isForPrompting="false"/>
+    <parameter name="text" class="java.lang.String" isForPrompting="true"/>
     <parameter name="subreportParameter" class="net.sf.jasperreports.engine.JasperReport"/>
     <parameter name="subreportDataSource" class="net.sf.jasperreports.engine.data.JRMapCollectionDataSource"/>
-
     <title>
         <band height="100">
             <textField>
@@ -18,7 +17,6 @@
                 <textElement textAlignment="Left"/>
                 <textFieldExpression><![CDATA[$P{text}]]></textFieldExpression>
             </textField>
-
             <subreport>
                 <reportElement x="0" y="70" width="555" height="20" uuid="4ebe9564-2d1c-465f-8976-06f92a560e0f"/>
 <!--                <dataSourceExpression><![CDATA[$P{subreportDataSource}]]></dataSourceExpression>-->
@@ -28,7 +26,4 @@
             </subreport>
         </band>
     </title>
-    <detail>
-        <band height="20"/>
-    </detail>
 </jasperReport>
