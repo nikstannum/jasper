@@ -5,13 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRLineBox;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignConditionalStyle;
@@ -24,6 +25,7 @@ import net.sf.jasperreports.engine.design.JRDesignStyle;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
@@ -44,13 +46,23 @@ public class App {
     }
 
     public static void generateReport() throws JRException, IOException {
-        JasperDesign jasperDesign = createDesign();
-        JasperReport jasperReport = JasperCompileManager
-                .compileReport(jasperDesign);
-        JRDataSource jrDataSource = prepareDataSource();
+        JasperReport mainReport = JasperCompileManager
+                .compileReport("C:\\Users\\myASUS\\eclipse-workspace\\jasper\\src\\main\\resources\\template.jrxml");
 
-        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport,
-                new HashMap<>(), jrDataSource);
+        Map<String, Object> mainParameters = new HashMap<>();
+        mainParameters.put("text", "My text");
+
+        JasperDesign tableJasperDesign = createDesign();
+
+        JRMapCollectionDataSource jrDataSource = prepareDataSource();
+
+        JasperReport tableJasperReport = JasperCompileManager
+                .compileReport(tableJasperDesign);
+
+        mainParameters.put("subreportParameter", tableJasperReport);
+        mainParameters.put("subreportDataSource", jrDataSource);
+
+        JasperPrint jasperPrint = JasperFillManager.fillReport(mainReport, mainParameters, jrDataSource);
 
         try (FileOutputStream baos = new FileOutputStream("dynamicReportUPDATE.pdf")) {
             JRPdfExporter jrPdfExporter = new JRPdfExporter();
@@ -60,6 +72,7 @@ public class App {
             SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
             jrPdfExporter.setConfiguration(configuration);
             jrPdfExporter.exportReport();
+
         }
     }
 
@@ -70,12 +83,13 @@ public class App {
      *
      * @return JRDataSource.
      */
-    private static JRDataSource prepareDataSource() {
+    private static JRMapCollectionDataSource prepareDataSource() {
         List<Map<String, ?>> preparedData = new ArrayList<>();
         Map<String, Object> map;
-        map = new HashMap<String, Object>();
-        map.put("name", "Первый");
+        map = new HashMap<>();
+        map.put("name", "First");
         map.put("value", 10);
+
         // В реальности нужно будет добавлять необходимые поля, сколько нужно,
         // динамически, в зависимости от параметров и данных.
         preparedData.add(map);
@@ -109,11 +123,11 @@ public class App {
         // Рамка вокруг ячейки.
         JRLineBox lineBox = null;
 
-        final int ROW_HEIGHT = 11; // высота строки (ячейки)
+        final int ROW_HEIGHT = 110; // высота строки (ячейки)
         final int COLUMN_WIDTH = 60; // ширина строки (ячейки)
 
         JasperDesign jasperDesign = new JasperDesign();
-        jasperDesign.setName("dynamicColumns");
+        jasperDesign.setName("sub_template");
         jasperDesign.setPageWidth(600); // ширина листа
         jasperDesign.setPageHeight(500); // высота листа
         jasperDesign.setColumnWidth(COLUMN_WIDTH);
@@ -123,8 +137,8 @@ public class App {
         jasperDesign.setTopMargin(40); // верхнее
         jasperDesign.setBottomMargin(40); // нижнее
         jasperDesign.setIgnorePagination(true);
-//        jasperDesign
-//                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
+        jasperDesign
+                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
 
         JRDesignStyle normalStyle = new JRDesignStyle();
         normalStyle.setName("normal");
@@ -208,8 +222,12 @@ public class App {
         textField.setStyle(normalStyle);
         band.addElement(textField);
         x += textField.getWidth();
+
+
         // DetailsBand добавляется немного странно, да...
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(band);
+
+
 
         // Column footer
         band = new JRDesignBand();
