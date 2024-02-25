@@ -3,13 +3,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRLineBox;
+import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -30,11 +29,6 @@ import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
-/**
- * Пример генерации отчёта в JasperReports программно.
- *
- * @author urvanov
- */
 public class App {
     public static void main(String[] args) throws JRException {
         try {
@@ -50,7 +44,7 @@ public class App {
                 .compileReport("C:\\Users\\myASUS\\eclipse-workspace\\jasper\\src\\main\\resources\\template.jrxml");
 
         Map<String, Object> mainParameters = new HashMap<>();
-        mainParameters.put("text", "My text");
+        mainParameters.put("text", "Some text");
 
         JasperDesign tableJasperDesign = createDesign();
 
@@ -58,6 +52,7 @@ public class App {
 
         JasperReport tableJasperReport = JasperCompileManager
                 .compileReport(tableJasperDesign);
+
 
         mainParameters.put("subreportParameter", tableJasperReport);
         mainParameters.put("subreportDataSource", jrDataSource);
@@ -87,9 +82,16 @@ public class App {
         List<Map<String, ?>> preparedData = new ArrayList<>();
         Map<String, Object> map;
         map = new HashMap<>();
-        map.put("name", "First");
+        map.put("name", "Первый");
         map.put("value", 10);
 
+        // В реальности нужно будет добавлять необходимые поля, сколько нужно,
+        // динамически, в зависимости от параметров и данных.
+        preparedData.add(map);
+
+        map = new HashMap<String, Object>();
+        map.put("name", "Второй");
+        map.put("value", 4);
         // В реальности нужно будет добавлять необходимые поля, сколько нужно,
         // динамически, в зависимости от параметров и данных.
         preparedData.add(map);
@@ -123,22 +125,22 @@ public class App {
         // Рамка вокруг ячейки.
         JRLineBox lineBox = null;
 
-        final int ROW_HEIGHT = 110; // высота строки (ячейки)
+        final int ROW_HEIGHT = 15; // высота строки (ячейки)
         final int COLUMN_WIDTH = 60; // ширина строки (ячейки)
 
         JasperDesign jasperDesign = new JasperDesign();
         jasperDesign.setName("sub_template");
-        jasperDesign.setPageWidth(600); // ширина листа
-        jasperDesign.setPageHeight(500); // высота листа
+//        jasperDesign.setPageWidth(600); // ширина листа
+//        jasperDesign.setPageHeight(500); // высота листа
         jasperDesign.setColumnWidth(COLUMN_WIDTH);
         jasperDesign.setColumnSpacing(0); // расстояние между колонками
-        jasperDesign.setLeftMargin(40); // левое поле страницы
-        jasperDesign.setRightMargin(40); // правое
-        jasperDesign.setTopMargin(40); // верхнее
-        jasperDesign.setBottomMargin(40); // нижнее
-        jasperDesign.setIgnorePagination(true);
+//        jasperDesign.setLeftMargin(40); // левое поле страницы
+//        jasperDesign.setRightMargin(40); // правое
+//        jasperDesign.setTopMargin(40); // верхнее
+//        jasperDesign.setBottomMargin(40); // нижнее
+        jasperDesign.setIgnorePagination(true); // FIXME need to define
         jasperDesign
-                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
+                .setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL); // FIXME when there is no data
 
         JRDesignStyle normalStyle = new JRDesignStyle();
         normalStyle.setName("normal");

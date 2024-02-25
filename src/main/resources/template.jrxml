@@ -7,8 +7,6 @@
     <parameter name="text" class="java.lang.String" isForPrompting="false"/>
     <parameter name="subreportParameter" class="net.sf.jasperreports.engine.JasperReport"/>
     <parameter name="subreportDataSource" class="net.sf.jasperreports.engine.data.JRMapCollectionDataSource"/>
-    <parameter name="name" class="java.lang.String"/>
-    <field name="name" class="java.lang.String"/>
 
     <title>
         <band height="100">
@@ -19,14 +17,6 @@
                 </box>
                 <textElement textAlignment="Left"/>
                 <textFieldExpression><![CDATA[$P{text}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="100" y="0" width="70" height="20" uuid="72a0702d-c4a1-4674-95d3-107b9468c0f2"/>
-                <box>
-                    <pen lineWidth="0.0"/>
-                </box>
-                <textElement textAlignment="Left"/>
-                <textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
             </textField>
 
             <subreport>
